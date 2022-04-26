@@ -87,7 +87,7 @@ class OverrideUnityActivity : UnityPlayerActivity() {
 
     override fun onPause() {
         super.onPause()
-        this.mUnityPlayer?.pause()
+        this.mUnityPlayer?.resume()
     }
 
     override fun onResume() {
