@@ -1,3 +1,42 @@
+## 2022.1.1+4
+
+* 🌎 Web is now stable 🚀:
+    * Refactored WebView
+    * Refactored webUrl -> we are handling now everything for you!
+        * use now: `webUrl: http://localhost:${Uri.base.port}` (for Debug only) 
+        * for production remember to leave out the last `/` at the end of your url!
+    * Refactored Interfaces
+    * Use PointerInterceptor if you need stacked widgets (see `/examples` and Readme)
+    * Performance Improvements (Communication between HTMLElementView and Flutter)
+* 🛠️ Fix Android Crash if you use ARFoundation (ARCore)
+* 🛠️ Add updated UnityPackage: `few-2022.1.1-v2.unitypackage` -> use this for latest web and android fixes
+
+## 2022.1.1+3
+
+* Fixed array index range crash on ios
+
+## 2022.1.1+2
+
+* Fixed android screen offset
+
+## 2022.1.1+1
+
+* Fixed issue with unity crashing on ios when screen is pushed into stack
+
+## 2022.1.1
+
+* Fixed issues [#35](https://github.com/juicycleff/flutter-unity-view-widget/pull/595) by [@jamesncl](https://github.com/juicycleff/flutter-unity-view-widget/issues?q=is%3Apr+author%3Ajamesncl)
+* Force expensive surface as default for android
+
+## 2022.1.0+6
+
+* Pre Flutter 3.0.0 release
+
+## 2022.1.0+5
+
+* Migrated to Flutter 3.0.0
+* Issues with Android with AndroidView now exists
+
 ## 2022.1.0+4
 
 * Fixed unity screen turning white on scene load (Android)
