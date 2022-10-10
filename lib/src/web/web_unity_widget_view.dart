@@ -12,7 +12,7 @@ class WebUnityWidgetView extends StatefulWidget {
   /// Unity export sorce path, can be hosted or local
   final String unitySrcUrl;
   final Map<String, dynamic> unityOptions;
-  final void Function() onWebViewCreated;
+  final Function(WebViewXController controller) onWebViewCreated;
 
   @override
   State<WebUnityWidgetView> createState() => _WebUnityWidgetViewState();
@@ -22,7 +22,6 @@ class _WebUnityWidgetViewState extends State<WebUnityWidgetView> {
   @override
   void initState() {
     super.initState();
-    widget.onWebViewCreated();
   }
 
   @override
@@ -33,10 +32,10 @@ class _WebUnityWidgetViewState extends State<WebUnityWidgetView> {
   @override
   Widget build(BuildContext context) {
     return WebViewX(
-      initialContent: '${widget.unitySrcUrl}/UnityLibrary/index.html',
+      initialContent: widget.unitySrcUrl,
       initialSourceType: SourceType.url,
       javascriptMode: JavascriptMode.unrestricted,
-      onWebViewCreated: (_) {},
+      onWebViewCreated: widget.onWebViewCreated,
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
     );

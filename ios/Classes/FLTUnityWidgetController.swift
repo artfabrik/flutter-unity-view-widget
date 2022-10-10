@@ -9,34 +9,31 @@ import Foundation
 import UnityFramework
 
 // Defines unity controllable from Flutter.
-public class FLTUnityWidgetController: NSObject, FLTUnityOptionsSink, FlutterPlatformView {
-    private var _rootView: FLTUnityView
+class FLTUnityWidgetController: NSObject, FLTUnityOptionsSink, FlutterPlatformView {
+    private var fltUnityView: FLTUnityView
     private var viewId: Int64 = 0
     private var channel: FlutterMethodChannel?
     private weak var registrar: (NSObjectProtocol & FlutterPluginRegistrar)?
     
-    private var _disposed = false
-
     init(
         frame: CGRect,
         viewIdentifier viewId: Int64,
         arguments args: Any?,
         registrar: NSObjectProtocol & FlutterPluginRegistrar
     ) {
-        self._rootView = FLTUnityView(frame: frame)
+        self.fltUnityView = FLTUnityView(frame: frame)
         super.init()
-
-        globalControllers.append(self)
-
+        
         self.viewId = viewId
-
+        
         let channelName = String(format: "plugin.xraph.com/unity_view_%lld", viewId)
         self.channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
-
+        globalChannel = self.channel
+        
         self.channel?.setMethodCallHandler(self.methodHandler)
-        self.attachView()
+        self.initView()
     }
-
+    
     func methodHandler(_ call: FlutterMethodCall, result: FlutterResult) {
         if call.method == "unity#dispose" {
             self.dispose()
@@ -44,30 +41,30 @@ public class FLTUnityWidgetController: NSObject, FLTUnityOptionsSink, FlutterPla
         } else {
             self.reattachView()
             if call.method == "unity#isReady" {
-                result(GetUnityPlayerUtils().unityIsInitiallized())
+                result(GetUnityPlayerUtils()?.unityIsInitiallized())
             } else if call.method == "unity#isLoaded" {
-                let _isUnloaded = GetUnityPlayerUtils().isUnityLoaded()
+                let _isUnloaded = GetUnityPlayerUtils()?.isUnityLoaded()
                 result(_isUnloaded)
             } else if call.method == "unity#createUnityPlayer" {
-                startUnityIfNeeded()
+                self.initView()
                 result(nil)
             } else if call.method == "unity#isPaused" {
-                let _isPaused = GetUnityPlayerUtils().isUnityPaused()
+                let _isPaused = GetUnityPlayerUtils()?.isUnityPaused()
                 result(_isPaused)
             } else if call.method == "unity#pausePlayer" {
-                GetUnityPlayerUtils().pause()
+                GetUnityPlayerUtils()?.pause()
                 result(nil)
             } else if call.method == "unity#postMessage" {
                 self.postMessage(call: call, result: result)
                 result(nil)
             } else if call.method == "unity#resumePlayer" {
-                GetUnityPlayerUtils().resume()
+                GetUnityPlayerUtils()?.resume()
                 result(nil)
             } else if call.method == "unity#unloadPlayer" {
-                GetUnityPlayerUtils().unload()
+                GetUnityPlayerUtils()?.unload()
                 result(nil)
             } else if call.method == "unity#quitPlayer" {
-                GetUnityPlayerUtils().quit()
+                GetUnityPlayerUtils()?.quit()
                 result(nil)
             } else if call.method == "unity#waitForUnity" {
                 result(nil)
@@ -78,90 +75,91 @@ public class FLTUnityWidgetController: NSObject, FLTUnityOptionsSink, FlutterPla
     }
 
     func setDisabledUnload(enabled: Bool) {
-
+        
     }
 
-    public func view() -> UIView {
-        return _rootView;
+    func view() -> UIView {
+        return fltUnityView
     }
 
-    private func startUnityIfNeeded() {
-        GetUnityPlayerUtils().createPlayer(completed: { [self] (view: UIView?) in
-
-        })
+    func initView() {
+        if (GetUnityPlayerUtils()?.unityIsInitiallized() == true) {
+            fltUnityView.setUnityView(GetUnityPlayerUtils()?.ufw?.appController()?.rootView)
+        } else {
+            GetUnityPlayerUtils()?.createPlayer(completed: { [self] (view: UIView?) in
+                if let v = view {
+                    fltUnityView.setUnityView(v)
+                    self.channel?.invokeMethod("events#onUnityCreated", arguments: nil)
+                }
+            })
+        }
+    }
+    
+    @objc
+    public func unityMessageHandler(_ message: UnsafePointer<Int8>?) {
+        if let strMsg = message {
+            self.channel?.invokeMethod("events#onUnityMessage", arguments: String(utf8String: strMsg))
+        } else {
+            self.channel?.invokeMethod("events#onUnityMessage", arguments: "")
+        }
     }
 
+    @objc
+    public func unitySceneLoadedHandler(name: UnsafePointer<Int8>?, buildIndex: UnsafePointer<Int>?, isLoaded: UnsafePointer<ObjCBool>?, isValid: UnsafePointer<ObjCBool>?) {
+        if let sceneName = name,
+           let bIndex = buildIndex,
+           let loaded = isLoaded,
+           let valid = isValid {
+        
+            let addObject: Dictionary<String, Any> = [
+                "name": String(utf8String: sceneName) ?? "",
+                "buildIndex": bIndex,
+                "isLoaded": loaded,
+                "isValid": valid,
+            ]
+            self.channel?.invokeMethod("events#onUnitySceneLoaded", arguments: addObject)
+        }
+    }
+    
     func attachView() {
-        startUnityIfNeeded()
+        if (GetUnityPlayerUtils() != nil) {
+            GetUnityPlayerUtils()?.initUnity()
+            let unityView = GetUnityPlayerUtils()?.ufw?.appController()?.rootView
+            if let superview = unityView?.superview {
+                unityView?.removeFromSuperview()
+                superview.layoutIfNeeded()
+            }
 
-        let unityView = GetUnityPlayerUtils().ufw?.appController()?.rootView
-        if let superview = unityView?.superview {
-            unityView?.removeFromSuperview()
-            superview.layoutIfNeeded()
+//            if let unityView = unityView {
+//                fltUnityView.addSubview(unityView)
+//            }
+//            GetUnityPlayerUtils()?.resume()
         }
-
-        if let unityView = unityView {
-            _rootView.addSubview(unityView)
-            _rootView.layoutIfNeeded()
-            self.channel?.invokeMethod("events#onViewReattached", arguments: "")
-        }
-        GetUnityPlayerUtils().resume()
     }
 
     func reattachView() {
-        let unityView = GetUnityPlayerUtils().ufw?.appController()?.rootView
+        let unityView = GetUnityPlayerUtils()?.ufw?.appController()?.rootView
         let superview = unityView?.superview
-        if superview != _rootView {
+        if superview != fltUnityView {
             attachView()
         }
-
-        GetUnityPlayerUtils().resume()
-    }
-
-    func removeViewIfNeeded() {
-        if GetUnityPlayerUtils().ufw == nil {
-            return
+        if GetUnityPlayerUtils() != nil {
+            GetUnityPlayerUtils()?.resume()
         }
-
-        let unityView = GetUnityPlayerUtils().ufw?.appController()?.rootView
-        if _rootView == unityView?.superview {
-            if globalControllers.isEmpty {
-                unityView?.removeFromSuperview()
-                unityView?.superview?.layoutIfNeeded()
-            } else {
-                globalControllers.last?.reattachView()
-            }
-        }
-        GetUnityPlayerUtils().resume()
     }
-
+    
     func dispose() {
-        if _disposed {
-            return
-        }
-
-        globalControllers.removeAll{ value in
-            return value == self
-        }
-
         channel?.setMethodCallHandler(nil)
-        removeViewIfNeeded()
-        
-        _disposed = true
+        // globalChannel?.setMethodCallHandler(nil)
+        if GetUnityPlayerUtils() != nil {
+            let unityView = GetUnityPlayerUtils()?.ufw?.appController()?.rootView
+            let superview = unityView?.superview
+            unityView?.removeFromSuperview()
+            superview?.layoutIfNeeded()
+            // GetUnityPlayerUtils()?.pause()
+        }
     }
-    
-    /// Handles messages from unity in the current view
-    func handleMessage(message: String) {
-        self.channel?.invokeMethod("events#onUnityMessage", arguments: message)
-    }
-    
-    
-    /// Handles scene changed event from unity in the current view
-    func handleSceneChangeEvent(info: Dictionary<String, Any>) {
-        self.channel?.invokeMethod("events#onUnitySceneLoaded", arguments: info)
-    }
-    
-    /// Post messages to unity from flutter
+
     func postMessage(call: FlutterMethodCall, result: FlutterResult) {
         guard let args = call.arguments else {
             result("iOS could not recognize flutter arguments in method: (postMessage)")
@@ -172,7 +170,7 @@ public class FLTUnityWidgetController: NSObject, FLTUnityOptionsSink, FlutterPla
            let gObj = myArgs["gameObject"] as? String,
            let method = myArgs["methodName"] as? String,
            let message = myArgs["message"] as? String {
-            GetUnityPlayerUtils().postMessageToUnity(gameObject: gObj, unityMethodName: method, unityMessage: message)
+            GetUnityPlayerUtils()?.postMessageToUnity(gameObject: gObj, unityMethodName: method, unityMessage: message)
             result(nil)
         } else {
             result(FlutterError(code: "-1", message: "iOS could not extract " +

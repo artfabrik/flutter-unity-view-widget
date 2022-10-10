@@ -117,13 +117,15 @@ class _UnityWidgetState extends State<UnityWidget> {
 
     return WebUnityWidgetView(
       unitySrcUrl: widget.webUrl ?? '',
-      onWebViewCreated: _onPlatformViewCreated,
+      onWebViewCreated: (_) {
+        _onPlatformViewCreated();
+      },
       unityOptions: unityOptions,
     );
   }
 
   Future<void> _onPlatformViewCreated() async {
-    final controller = await WebUnityWidgetController.init(0, this);
+    final controller = await WebUnityWidgetController(this);
     _controller = controller;
     widget.onUnityCreated(controller);
 

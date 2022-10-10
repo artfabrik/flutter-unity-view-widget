@@ -169,18 +169,15 @@ class MethodChannelUnityWidget extends UnityWidgetPlatform {
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
-      // commented for 3.0.0 changes in platform view rendition
-      // if (!useAndroidViewSurface) {
-      //   return AndroidView(
-      //     viewType: _viewType,
-      //     onPlatformViewCreated: onPlatformViewCreated,
-      //     gestureRecognizers: gestureRecognizers,
-      //     creationParams: creationParams,
-      //     creationParamsCodec: const StandardMessageCodec(),
-      //     hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-      //     layoutDirection: TextDirection.ltr,
-      //   );
-      // }
+      if (!useAndroidViewSurface) {
+        return AndroidView(
+          viewType: _viewType,
+          onPlatformViewCreated: onPlatformViewCreated,
+          gestureRecognizers: gestureRecognizers,
+          creationParams: creationParams,
+          creationParamsCodec: const StandardMessageCodec(),
+        );
+      }
 
       return PlatformViewLink(
         viewType: _viewType,
@@ -196,7 +193,8 @@ class MethodChannelUnityWidget extends UnityWidgetPlatform {
           );
         },
         onCreatePlatformView: (PlatformViewCreationParams params) {
-          final controller = PlatformViewsService.initExpensiveAndroidView(
+          final SurfaceAndroidViewController controller =
+              PlatformViewsService.initSurfaceAndroidView(
             id: params.id,
             viewType: _viewType,
             layoutDirection: TextDirection.ltr,
@@ -204,7 +202,6 @@ class MethodChannelUnityWidget extends UnityWidgetPlatform {
             creationParamsCodec: const StandardMessageCodec(),
             onFocus: () => params.onFocusChanged(true),
           );
-
           controller
             ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
             ..addOnPlatformViewCreatedListener(onPlatformViewCreated)

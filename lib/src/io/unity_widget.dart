@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -139,7 +140,7 @@ class _UnityWidgetState extends State<UnityWidget> {
     super.initState();
 
     if (!kIsWeb) {
-      _unityId = _nextUnityCreationId++;
+      _unityId = Platform.isAndroid ? _nextUnityCreationId++ : 0;
     } else {
       _unityId = 0;
     }
@@ -148,7 +149,9 @@ class _UnityWidgetState extends State<UnityWidget> {
   @override
   Future<void> dispose() async {
     if (!kIsWeb) {
-      if (_nextUnityCreationId > 0) --_nextUnityCreationId;
+      if (Platform.isIOS) {
+        if (_nextUnityCreationId > 0) --_nextUnityCreationId;
+      }
     }
     try {
       _controller?.dispose();

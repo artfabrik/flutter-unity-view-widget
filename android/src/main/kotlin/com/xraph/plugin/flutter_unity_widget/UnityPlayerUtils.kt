@@ -1,13 +1,7 @@
 package com.xraph.plugin.flutter_unity_widget
 
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.os.Build
 import android.util.Log
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.WindowManager
 import android.widget.FrameLayout
 import com.unity3d.player.IUnityPlayerLifecycleEvents
@@ -45,7 +39,6 @@ class UnityPlayerUtils {
         /**
          * Create a new unity player with callback
          */
-        @SuppressLint("NewApi")
         fun createUnityPlayer(ule: IUnityPlayerLifecycleEvents, callback: OnCreateUnityViewCallback?) {
             if (activity == null) {
                 throw java.lang.Exception("Unity activity is null")
@@ -53,9 +46,6 @@ class UnityPlayerUtils {
 
             if (unityPlayer != null) {
                 unityLoaded = true
-                unityPlayer!!.bringToFront()
-                unityPlayer!!.requestLayout()
-                unityPlayer!!.invalidate()
                 focus()
                 callback?.onReady()
                 return
@@ -63,8 +53,6 @@ class UnityPlayerUtils {
 
             try {
                 unityPlayer = CustomUnityPlayer(activity!!, ule)
-                // unityPlayer!!.z = (-1).toFloat()
-                // addUnityViewToBackground(activity!!)
                 unityLoaded = true
 
                 if (!options.fullscreenEnabled) {
@@ -187,27 +175,6 @@ class UnityPlayerUtils {
 
         fun reset() {
             unityLoaded = false
-        }
-
-        fun addUnityViewToGroup(group: ViewGroup) {
-             val layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
-//             val layoutParams = ViewGroup.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT)
-//            val layoutParams = ViewGroup.LayoutParams(570, 770)
-            group.addView(unityPlayer, layoutParams)
-        }
-
-        fun addUnityViewToBackground() {
-            if (unityPlayer == null) {
-                return
-            }
-            if (unityPlayer!!.parent != null) {
-                (unityPlayer!!.parent as ViewGroup).removeView(unityPlayer)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                unityPlayer!!.z = -1f
-            }
-            val layoutParams = ViewGroup.LayoutParams(1, 1)
-            activity!!.addContentView(unityPlayer, layoutParams)
         }
     }
 }

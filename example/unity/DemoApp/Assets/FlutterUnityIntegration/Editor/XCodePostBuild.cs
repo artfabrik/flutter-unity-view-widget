@@ -72,9 +72,8 @@ public static class XcodePostBuild
         var targetGuid = pbx.GetUnityFrameworkTargetGuid();
         var projGuid = pbx.ProjectGuid();
 
-        // TODO: Rex optional set this value
-        // Set skip_install to NO
-        pbx.SetBuildProperty(targetGuid, "SKIP_INSTALL", "YES");
+        // Set skip_install to NO 
+        pbx.SetBuildProperty(targetGuid, "SKIP_INSTALL", "NO");
 
         // Set some linker flags
         pbx.SetBuildProperty(projGuid, "ENABLE_BITCODE", "YES");
