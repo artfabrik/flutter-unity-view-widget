@@ -222,7 +222,8 @@ class FlutterUnityWidgetController(
     }
 
     override fun onUnityPlayerQuitted() {
-        TODO("Not yet implemented")
+        if(disposed)
+            return
     }
 
     //#endregion
