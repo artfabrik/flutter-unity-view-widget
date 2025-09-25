@@ -247,6 +247,13 @@ namespace FlutterUnityIntegration.Editor
                 Copy(sharedPath, Path.Combine(AndroidExportPath, "shared"));
             }
 
+            // Unity 6.2 requires unity.androidNdkPath and unity.androidSdkPath from gradle.properties.
+            // https://github.com/juicycleff/flutter-unity-view-widget/issues/1039
+#if UNITY_6000_2_OR_NEWER
+            // Copy gradle.properties from the Unity output to android/unityLibrary/
+            File.Copy(Path.Combine(APKPath, "gradle.properties"), Path.Combine(AndroidExportPath, "gradle.properties"), true);
+#endif
+
             // Modify build.gradle
             ModifyAndroidGradle(isPlugin);
 
