@@ -107,7 +107,7 @@ class UnityPlayerUtils {
                 focus()
                 callback?.onReady()
             } catch (e: Exception) {
-                Log.e(LOG_TAG, e.toString())
+                Log.e(LOG_TAG, "createUnityPlayer failed", e)
             }
         }
 

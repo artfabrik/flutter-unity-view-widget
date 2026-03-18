@@ -356,7 +356,8 @@ class FlutterUnityWidgetController(
     }
 
     fun reattachToView() {
-        if (UnityPlayerUtils.unityFrameLayout!!.parent != view) {
+        val frameLayout = UnityPlayerUtils.unityFrameLayout ?: return
+        if (frameLayout.parent != view) {
             this.attachToView()
             Handler(Looper.getMainLooper()).post {
                 methodChannel.invokeMethod("events#onViewReattached", null)
